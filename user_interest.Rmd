@@ -1,0 +1,93 @@
+---
+output:
+  word_document: default
+  html_document: default
+---
+
+```{r}
+setwd("/Users/yiminwong/Project/KGC")
+```
+
+```{r}
+data = read.csv('user_interests.csv')
+str(data)
+```
+```{r}
+library(ggplot2); 
+library(ggthemes);
+library(dplyr);
+```
+
+```{r}
+library(tidytext)
+```
+
+```{r}
+data$interest <- as.character(data$interest)
+```
+
+```{r}
+data%>%
+  unnest_tokens(input = interest, output = word)%>%
+  select(word)%>%
+  group_by(word)%>%
+  summarize(count = n())%>%
+  ungroup()%>%
+  arrange(desc(count))%>%
+  top_n(20)%>%
+  ggplot(aes(x=reorder(word,count), y=count, fill=count))+
+    geom_col()+
+    xlab('words')+
+    coord_flip()
+
+```
+
+```{r}
+data%>%
+  unnest_tokens(input = interest, output = word)%>%
+  select(word)%>%
+  anti_join(stop_words)%>%
+  group_by(word)%>%
+  summarize(count = n())%>%
+  ungroup()%>%
+  arrange(desc(count))%>%
+  top_n(25)
+```
+
+```{r}
+data%>%
+  unnest_tokens(input = interest, output = word)%>%
+  select(word)%>%
+  anti_join(stop_words)%>%
+  group_by(word)%>%
+  summarize(count = n())%>%
+  ungroup()%>%
+  arrange(desc(count))%>%
+  top_n(25)%>%
+  ggplot(aes(x=reorder(word,count), y=count, fill=count))+
+    geom_col()+
+    xlab('words')+
+    coord_flip()
+```
+
+```{r}
+library(wordcloud)
+wordcloudData = 
+data %>%
+  group_by(user_id) %>%
+  unnest_tokens(output=word,input=interest)%>%
+  anti_join(stop_words)%>%
+  group_by(word)%>%
+  summarize(freq = n())%>%
+  arrange(desc(freq))%>%
+  ungroup()%>%
+  data.frame()
+```
+
+
+```{r}
+library(wordcloud)
+set.seed(617)
+wordcloud(words = wordcloudData$word,wordcloudData$freq,scale=c(2,0.5),max.words = 100,colors=brewer.pal(9,"Spectral"))
+```
+
